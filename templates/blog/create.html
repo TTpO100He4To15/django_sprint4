@@ -1,44 +1,71 @@
 {% extends "base.html" %}
 {% load django_bootstrap5 %}
+
 {% block title %}
-  {% if '/edit/' in request.path %}
-    Редактирование публикации
-  {% elif "/delete/" in request.path %}
+  {% if delete_mode %}
     Удаление публикации
+  {% elif edit_mode %}
+    Редактирование публикации
   {% else %}
-    Добавление публикации
+    Новая публикация
   {% endif %}
 {% endblock %}
+
 {% block content %}
   <div class="col d-flex justify-content-center">
     <div class="card" style="width: 40rem;">
       <div class="card-header">
-        {% if '/edit/' in request.path %}
-          Редактирование публикации
-        {% elif '/delete/' in request.path %}
-          Удаление публикации
-        {% else %}
-          Добавление публикации
-        {% endif %}
+        <h5>
+          {% if delete_mode %}
+            Удаление публикации
+          {% elif edit_mode %}
+            Редактирование публикации
+          {% else %}
+            Добавление новой публикации
+          {% endif %}
+        </h5>
       </div>
+      
       <div class="card-body">
         <form method="post" enctype="multipart/form-data">
           {% csrf_token %}
-          {% if not '/delete/' in request.path %}
-            {% bootstrap_form form %}
-          {% else %}
-            <article>
-              {% if form.instance.image %}
-                <a href="{{ form.instance.image.url }}" target="_blank">
-                  <img class="border-3 rounded img-fluid img-thumbnail mb-2" src="{{ form.instance.image.url }}">
+
+          {% if delete_mode %}
+            <!-- Режим удаления -->
+            <article class="mb-4">
+              {% if post.image %}
+                <a href="{{ post.image.url }}" target="_blank">
+                  <img src="{{ post.image.url }}" class="img-fluid rounded mb-3" alt="">
                 </a>
               {% endif %}
-              <p>{{ form.instance.pub_date|date:"d E Y" }} | {% if form.instance.location and form.instance.location.is_published %}{{ form.instance.location.name }}{% else %}Планета Земля{% endif %}<br>
-              <h3>{{ form.instance.title }}</h3>
-              <p>{{ form.instance.text|linebreaksbr }}</p>
+              <h4>{{ post.title }}</h4>
+              <p class="text-muted">
+                {{ post.pub_date|date:"d E Y" }} 
+                | {% if post.location and post.location.is_published %}{{ post.location.name }}{% else %}Планета Земля{% endif %}
+              </p>
+              <div class="border p-3 bg-light">
+                {{ post.text|linebreaksbr }}
+              </div>
             </article>
+
+            <p class="text-danger"><strong>Вы уверены, что хотите удалить эту публикацию?</strong></p>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-danger">Да, удалить</button>
+              <a href="{% url 'blog:post_detail' post.id %}" class="btn btn-secondary">Отмена</a>
+            </div>
+
+          {% else %}
+            <!-- Режим создания и редактирования -->
+            {% bootstrap_form form %}
+            
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" class="btn btn-primary">
+                {% if edit_mode %}Сохранить изменения{% else %}Опубликовать{% endif %}
+              </button>
+              <a href="{% url 'blog:index' %}" class="btn btn-secondary">Отмена</a>
+            </div>
           {% endif %}
-          {% bootstrap_button button_type="submit" content="Отправить" %}
         </form>
       </div>
     </div>

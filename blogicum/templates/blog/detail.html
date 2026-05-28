@@ -1,12 +1,56 @@
 {% extends "base.html" %}
+
 {% block title %}
-{{ post.title }} | {% if post.location and post.location.is_published %}{{ post.location.name }} |{% endif %} {{ post.pub_date|date:"d E Y" }}
+  {{ post.title }} | {% if post.location and post.location.is_published %}{{ post.location.name }} |{% endif %} {{ post.pub_date|date:"d E Y" }}
 {% endblock %}
+
 {% block content %}
-  <article>
-    <p>{{ post.pub_date|date:"d E Y" }} | {% if post.location and post.location.is_published %}{{ post.location.name }}{% else %}Планета Земля{% endif %}<br>
-      <small>От автора @{{ post.author.username }} в категории {% include "includes/category_link.html" %}</small></p>
-    <h3>{{ post.title }}</h3>
-    <p>{{ post.text|linebreaksbr }}</p>
-  </article> 
+  <article class="mb-5">
+    <p>
+      {{ post.pub_date|date:"d E Y" }} 
+      | {% if post.location and post.location.is_published %}{{ post.location.name }}{% else %}Планета Земля{% endif %}<br>
+      <small>
+        От автора 
+        <a href="{% url 'blog:profile' post.author.username %}">@{{ post.author.username }}</a>
+        в категории {% include "includes/category_link.html" %}
+      </small>
+    </p>
+
+    <h1>{{ post.title }}</h1>
+    {% if post.image %}
+      <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid mb-4">
+    {% endif %}
+
+    <div class="post-text">
+      {{ post.text|linebreaksbr }}
+    </div>
+  </article>
+
+  <!-- ==================== КОММЕНТАРИИ ==================== -->
+  <h3 class="mt-5">Комментарии ({{ post.comment_count|default:0 }})</h3>
+
+  {% if comments %}
+    {% for comment in comments %}
+      {% include "includes/comment_card.html" with comment=comment %}
+    {% endfor %}
+  {% else %}
+    <p class="text-muted">Пока нет комментариев. Будьте первым!</p>
+  {% endif %}
+
+
+  {% if user.is_authenticated and form %}
+    <div class="mt-4">
+      <h4>Написать комментарий</h4>
+      <form method="post" action="{% url 'blog:add_comment' post.id %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Отправить комментарий</button>
+      </form>
+    </div>
+  {% elif not user.is_authenticated %}
+    <p class="mt-4">
+      <a href="{% url 'login' %}">Войдите</a>, чтобы оставить комментарий.
+    </p>
+  {% endif %}
+
 {% endblock %}

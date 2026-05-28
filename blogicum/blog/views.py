@@ -145,7 +145,10 @@ def create_post(request):
         post.author = request.user
         post.save()
         return redirect('blog:profile', username=request.user.username)
-    return render(request, 'blog/create.html', {'form': form})
+    return render(
+        request,
+        'blog/create.html',
+        {'form': form, 'create_mode': True})
 
 
 @login_required
@@ -161,7 +164,10 @@ def edit_post(request, post_id):
     if request.method == 'POST' and form.is_valid():
         form.save()
         return redirect('blog:post_detail', post_id=post_id)
-    return render(request, 'blog/create.html', {'form': form})
+    return render(
+        request,
+        'blog/create.html',
+        {'form': form, 'edit_mode': True, 'post': post})
 
 
 @login_required
@@ -173,7 +179,10 @@ def delete_post(request, post_id):
         post.delete()
         return redirect('blog:index')
     form = PostForm(instance=post)
-    return render(request, 'blog/create.html', {'form': form})
+    return render(
+        request,
+        'blog/create.html',
+        {'form': form, 'post': post, 'delete_mode': True})
 
 
 @login_required
@@ -209,7 +218,7 @@ def edit_comment(request, post_id, comment_id):
     return render(
         request,
         'blog/comment.html',
-        {'form': form, 'comment': comment}
+        {'form': form, 'comment': comment, "edit_mode": True}
     )
 
 
@@ -225,4 +234,7 @@ def delete_comment(request, post_id, comment_id):
     if request.method == 'POST':
         comment.delete()
         return redirect('blog:post_detail', post_id=post_id)
-    return render(request, 'blog/comment.html', {'comment': comment})
+    return render(
+        request,
+        'blog/comment.html',
+        {'comment': comment, "edit_mode": True})
